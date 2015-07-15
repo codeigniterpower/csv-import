@@ -21,7 +21,8 @@ If you would like to use a different set of column headers, other than what is g
 
 	$this->csvimport->get_array('test.csv', array('id', 'name', 'company', 'phone'));
 	
-	In case you want to import the data to your database and want an auto check for field limits, you can pass the array of your column headers with a unique character and the limit right after and a new parameter that will be this unique character to be used as delimiter in a explode:
+In case you want to import the data to your database and want an auto check for field limits, you can pass the array of your column headers with a unique character and the limit right after and a new parameter that will be this unique character to be used as delimiter in a explode:
+
 	$this->csvimport->get_array('test.csv', array('id#1000', 'name#100', 'company#50', 'phone#10'), '#');
 
 *Warning* The function assumes that the number of column headers will match the number of values in each row.
