@@ -22,6 +22,7 @@ class Csvimport {
     private $handle = "";
     private $filepath = FALSE;
     private $column_headers = FALSE;
+    private $check_limit_fields = FALSE;
     private $initial_line = 0;
     private $delimiter = ",";
     private $detect_line_endings = FALSE;
@@ -33,12 +34,13 @@ class Csvimport {
      * @access  public
      * @param   filepath        string  Location of the CSV file
      * @param   column_headers  array   Alternate values that will be used for array keys instead of first line of CSV
+     * @param   check_limit_fields  string  By passing a string it activates the check for a field limits (in the event the data will be imported to a database) and sets the delimiter for the explode function to split the headings.
      * @param   detect_line_endings  boolean  When true sets the php INI settings to allow script to detect line endings. Needed for CSV files created on Macs.
      * @param   initial_line  integer  Sets the line of the file from which start parsing data.
      * @param   delimiter  string  The values delimiter (e.g. ";" or ",").
      * @return  array
      */
-    public function get_array($filepath=FALSE, $column_headers=FALSE, $detect_line_endings=FALSE, $initial_line=FALSE, $delimiter=FALSE)
+    public function get_array($filepath=FALSE, $column_headers=FALSE, $check_limit_fields=FALSE, $detect_line_endings=FALSE, $initial_line=FALSE, $delimiter=FALSE)
     {
         // File path
         if(! $filepath)
@@ -143,7 +145,21 @@ class Csvimport {
                 $new_row = $row - $this->initial_line - 1; // needed so that the returned array starts at 0 instead of 1
                 foreach($column_headers as $key => $value) // assumes there are as many columns as their are title columns
                 {
-                    $result[$new_row][$value] = utf8_encode(trim($data[$key]));
+                    if($this->column_headers AND $check_limit_fields)
+                    {
+                        $value = explode($check_limit_fields, trim($value));
+
+                        if(intval($value[1]) < strlen(trim($data[$key])))
+                        {
+                            $this->_close_csv(); // If the value is greater than the limit,
+                            $error_code = '100'; // it returns an arbitrary error code so
+                            return $error_code;  // it can be checked in the controller.
+                        }
+                        $col = $value[0];
+                        $result[$new_row][$col] = utf8_encode(trim($data[$key]));
+                    } else {
+                        $result[$new_row][$value] = utf8_encode(trim($data[$key]));
+                    }
                 }
             }
 
